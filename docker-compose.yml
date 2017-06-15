@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  app:
+    build:
+      context: .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  build:
+    extends: app
+    image: $APP_NAME:build
+
+  test:
+    extends: app
+    image: $APP_NAME:test
+    command: docker ps && docker-compose version

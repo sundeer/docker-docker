@@ -1,0 +1,35 @@
+machine:
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
+
+    # install docker-compose
+    - pip install --upgrade pip
+    - pip install docker-compose
+    - export PATH=/opt/circleci/.pyenv/shims:$PATH
+  services:
+    - docker
+  environment:
+    APP_NAME: $CIRCLE_PROJECT_REPONAME
+
+test:
+  override:
+    - docker-compose run test
+
+deployment:
+  feature:
+    branch: /^feature\/.+/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag $APP_NAME:test $DOCKER_USER/$APP_NAME:$CIRCLE_BRANCH
+  develop:
+    branch: develop
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag $APP_NAME:test $DOCKER_USER/$APP_NAME:dev
+      - docker push $DOCKER_USER/$APP_NAME:dev
+  production:
+    tag: /^v[0-9]+(\.[0-9]+){2}(-rc[0-9]+)?$/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag $APP_NAME:test $DOCKER_USER/$APP_NAME:$CIRCLE_TAG
+      - docker push $DOCKER_USER/$APP_NAME:$CIRCLE_TAG
