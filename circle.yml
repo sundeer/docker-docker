@@ -11,6 +11,10 @@ machine:
   environment:
     APP_NAME: $CIRCLE_PROJECT_REPONAME
 
+compile:
+  override:
+    - docker-compose run build
+    
 test:
   override:
     - docker-compose run test
